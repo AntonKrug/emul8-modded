@@ -32,7 +32,7 @@ namespace Emul8.Core.Structure.Registers
             register.DefineValueField(0, register.MaxRegisterLength);
             return register;
         }
-
+                   
         public DoubleWordRegister(IPeripheral parent, uint resetValue = 0) : base(parent, resetValue, 32)
         {
         }
@@ -52,6 +52,7 @@ namespace Emul8.Core.Structure.Registers
         {
             WriteInner(offset, value);
         }
+
 
         /// <summary>
         /// Defines the read callback that is called once on each read, regardles of the number of defined register fields.
@@ -155,6 +156,8 @@ namespace Emul8.Core.Structure.Registers
         {
             WriteInner(offset, value);
         }
+
+
 
         /// <summary>
         /// Defines the read callback that is called once on each read, regardles of the number of defined register fields.
@@ -333,6 +336,18 @@ namespace Emul8.Core.Structure.Registers
     public abstract partial class PeripheralRegister
     {
 
+        public string GetFields() {
+            string ret = "";
+            foreach (RegisterField field in registerFields) {
+                ret += field;
+            }
+            ret += "unimplemented/reserved fields:\r\n";
+            foreach (Tag tag in tags) {
+                ret += tag;
+            }
+
+            return ret;
+        }
 
         /// <summary>
         /// Restores this register's value to its reset value, defined on per-field basis.
@@ -340,6 +355,20 @@ namespace Emul8.Core.Structure.Registers
         public void Reset()
         {
             UnderlyingValue = resetValue;
+        }
+
+        private Tuple<int, int> GetPositionAndWidth(string range, string name) 
+        {
+            string[] list = range.Split(':');
+
+            if (2 > list.Length && Int32.TryParse(range, out int singleBitBegin)) {
+                return Tuple.Create(singleBitBegin, 1);
+            }
+            else if (2 == list.Length && Int32.TryParse(list[1], out int begin) && Int32.TryParse(list[0], out int end)) {
+                return Tuple.Create(begin, (end-begin)+1);
+            }
+
+            throw new ArgumentException("Range has wrong syntax for register {0}. Should be in \"31:2\" syntax, or \"22\" for single bits, but not the \"{1}\"".FormatWith(name, range));
         }
 
         /// <summary>
@@ -357,6 +386,12 @@ namespace Emul8.Core.Structure.Registers
                 Position = position,
                 Width = width
             });
+        }
+
+        public void Tag(string name, string range)
+        {
+            Tuple<int, int> positionAndWidth = GetPositionAndWidth(range, name);
+            this.Tag(name, positionAndWidth.Item1, positionAndWidth.Item2);
         }
 
         /// <summary>
@@ -377,11 +412,14 @@ namespace Emul8.Core.Structure.Registers
             Action<bool, bool> writeCallback = null, Action<bool, bool> changeCallback = null, Func<bool, bool> valueProviderCallback = null, string name = null)
         {
             ThrowIfRangeIllegal(position, 1, name);
-            var field = new FlagRegisterField(this, position, mode, readCallback, writeCallback, changeCallback, valueProviderCallback);
+            var field = new FlagRegisterField(this, position, mode, readCallback, writeCallback, changeCallback, valueProviderCallback, name);
             registerFields.Add(field);
             RecalculateFieldMask();
             return field;
         }
+
+
+
 
         /// <summary>
         /// Defines the value field. Its value is interpreted as a regular number.
@@ -402,10 +440,17 @@ namespace Emul8.Core.Structure.Registers
             Action<uint, uint> writeCallback = null, Action<uint, uint> changeCallback = null, Func<uint, uint> valueProviderCallback = null, string name = null)
         {
             ThrowIfRangeIllegal(position, width, name);
-            var field = new ValueRegisterField(this, position, width, mode, readCallback, writeCallback, changeCallback, valueProviderCallback);
+            var field = new ValueRegisterField(this, position, width, mode, readCallback, writeCallback, changeCallback, valueProviderCallback, name);
             registerFields.Add(field);
             RecalculateFieldMask();
             return field;
+        }
+
+        public IValueRegisterField DefineValueField(string range, FieldMode mode = FieldMode.Read | FieldMode.Write, Action<uint, uint> readCallback = null,
+            Action<uint, uint> writeCallback = null, Action<uint, uint> changeCallback = null, Func<uint, uint> valueProviderCallback = null, string name = null)
+        {
+            Tuple<int, int> positionAndWidth = GetPositionAndWidth(range, name);
+            return DefineValueField(positionAndWidth.Item1, positionAndWidth.Item2, mode, readCallback, writeCallback, changeCallback, valueProviderCallback, name);
         }
 
         /// <summary>
@@ -424,14 +469,22 @@ namespace Emul8.Core.Structure.Registers
         /// the value returned from it. This returned value is eventually passed as the first parameter of <paramref name="readCallback"/>.</param> 
         /// <param name="name">Ignored parameter, for convenience. Treat it as a comment.</param>
         public IEnumRegisterField<TEnum> DefineEnumField<TEnum>(int position, int width, FieldMode mode = FieldMode.Read | FieldMode.Write, Action<TEnum, TEnum> readCallback = null,
-            Action<TEnum, TEnum> writeCallback = null, Action<TEnum, TEnum> changeCallback = null, Func<TEnum, TEnum> valueProviderCallback = null, string name = null)
+            Action<TEnum, TEnum> writeCallback = null, Action<TEnum, TEnum> changeCallback = null, Func<TEnum, TEnum> valueProviderCallback = null, string name = null, Type enumType = null)
             where TEnum : struct, IConvertible
         {
             ThrowIfRangeIllegal(position, width, name);
-            var field = new EnumRegisterField<TEnum>(this, position, width, mode, readCallback, writeCallback, changeCallback, valueProviderCallback);
+            var field = new EnumRegisterField<TEnum>(this, position, width, mode, readCallback, writeCallback, changeCallback, valueProviderCallback, name, enumType);
             registerFields.Add(field);
             RecalculateFieldMask();
             return field;
+        }
+
+        public IEnumRegisterField<TEnum> DefineEnumField<TEnum>(string range, FieldMode mode = FieldMode.Read | FieldMode.Write, Action<TEnum, TEnum> readCallback = null,
+                                                                Action<TEnum, TEnum> writeCallback = null, Action<TEnum, TEnum> changeCallback = null, Func<TEnum, TEnum> valueProviderCallback = null, string name = null, Type enumType = null)
+            where TEnum : struct, IConvertible
+        {
+            Tuple<int, int> positionAndWidth = GetPositionAndWidth(range, name);
+            return DefineEnumField(positionAndWidth.Item1, positionAndWidth.Item2, mode, readCallback, writeCallback, changeCallback, valueProviderCallback, name, enumType);
         }
 
         protected PeripheralRegister(IPeripheral parent, uint resetValue, int maxLength)

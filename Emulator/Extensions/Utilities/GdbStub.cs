@@ -17,7 +17,7 @@ namespace Emul8.Utilities
 {
     public class GdbStub : IDisposable, IExternal
     {
-        public GdbStub(int port, ICpuSupportingGdb cpu)
+        public GdbStub(int port, ICpuSupportingGdb cpu, bool autoStartOnConnection)
         {
             this.cpu = cpu;
             Port = port;
@@ -32,11 +32,17 @@ namespace Emul8.Utilities
             {
                 cpu.Halted += OnHalted;
                 cpu.ExecutionMode = ExecutionMode.SingleStep;
+                if (autoStartOnConnection) 
+                {
+                    cpu.Start();
+                }
+
             };
             terminal.ConnectionClosed += delegate
             {
                 cpu.Halted -= OnHalted;
                 cpu.ExecutionMode = ExecutionMode.Continuous;
+
             }; 
             terminal.Start(port);
             commHandler = new CommunicationHandler(this);

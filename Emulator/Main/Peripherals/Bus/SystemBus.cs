@@ -736,6 +736,7 @@ namespace Emul8.Peripherals.Bus
 
         public IEnumerable<BusRangeRegistration> GetRegistrationPoints(IBusPeripheral peripheral)
         {
+            //peripherals.Peripherals.Where(x => x.Peripheral == peripheral).Select(x => x.)
             return peripherals.Peripherals.Where(x => x.Peripheral == peripheral).Select(x => x.RegistrationPoint);
         }
 

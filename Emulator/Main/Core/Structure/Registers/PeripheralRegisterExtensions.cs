@@ -33,17 +33,32 @@ namespace Emul8.Core.Structure.Registers
             return register;
         }
 
+        public static T WithValueField<T>(this T register, string range, FieldMode mode = FieldMode.Read | FieldMode.Write, Action<uint, uint> readCallback = null,
+                                          Action<uint, uint> writeCallback = null, Action<uint, uint> changeCallback = null, Func<uint, uint> valueProviderCallback = null, string name = null) where T : PeripheralRegister
+        {
+            register.DefineValueField(range, mode, readCallback, writeCallback, changeCallback, valueProviderCallback, name);
+            return register;
+        }
+
         /// <summary>
         /// Fluent API for enum field creation. For parameters see <see cref="PeripheralRegister.DefineValueField"/>.
         /// </summary>
         /// <returns>This register with a defined enum field.</returns>
         public static R WithEnumField<R, T>(this R register, int position, int width, FieldMode mode = FieldMode.Read | FieldMode.Write, Action<T, T> readCallback = null,
-            Action<T, T> writeCallback = null, Action<T, T> changeCallback = null, Func<T, T> valueProviderCallback = null, string name = null) where R : PeripheralRegister
+            Action<T, T> writeCallback = null, Action<T, T> changeCallback = null, Func<T, T> valueProviderCallback = null, string name = null, Type enumType = null) where R : PeripheralRegister
             where T : struct, IConvertible
         {
-            register.DefineEnumField<T>(position, width, mode, readCallback, writeCallback, changeCallback, valueProviderCallback, name);
+            register.DefineEnumField<T>(position, width, mode, readCallback, writeCallback, changeCallback, valueProviderCallback, name, enumType);
             return register;
         }
+
+        public static R WithEnumField<R, T>(this R register, string range, FieldMode mode = FieldMode.Read | FieldMode.Write, Action<T, T> readCallback = null,
+            Action<T, T> writeCallback = null, Action<T, T> changeCallback = null, Func<T, T> valueProviderCallback = null, string name = null, Type enumType = null) where R : PeripheralRegister
+            where T : struct, IConvertible
+        {
+            register.DefineEnumField<T>(range, mode, readCallback, writeCallback, changeCallback, valueProviderCallback, name, enumType);
+            return register;
+        } 
 
         /// <summary>
         /// Fluent API for tagged field creation. For parameters see <see cref="PeripheralRegister.DefineValueField"/>.
@@ -52,6 +67,12 @@ namespace Emul8.Core.Structure.Registers
         public static T WithTag<T>(this T register, string name, int position, int width) where T : PeripheralRegister
         {
             register.Tag(name, position, width);
+            return register;
+        }
+
+        public static T WithTag<T>(this T register, string range, string name) where T : PeripheralRegister
+        {
+            register.Tag(name, range);
             return register;
         }
 
@@ -67,16 +88,31 @@ namespace Emul8.Core.Structure.Registers
             return register;
         }
 
+        public static T WithValueField<T>(this T register, string range, out IValueRegisterField valueField, FieldMode mode = FieldMode.Read | FieldMode.Write, Action<uint, uint> readCallback = null,
+                                          Action<uint, uint> writeCallback = null, Action<uint, uint> changeCallback = null, Func<uint, uint> valueProviderCallback = null, string name = null) where T : PeripheralRegister
+        {
+            valueField = register.DefineValueField(range, mode, readCallback, writeCallback, changeCallback, valueProviderCallback, name);
+            return register;
+        }
+
         /// <summary>
         /// Fluent API for enum field creation. For parameters see <see cref="PeripheralRegister.DefineValueField"/>.
         /// This overload allows you to retrieve the created field via <c>enumFiled</c> parameter.
         /// </summary>
         /// <returns>This register with a defined enum field.</returns>
         public static R WithEnumField<R, T>(this R register, int position, int width, out IEnumRegisterField<T> enumField, FieldMode mode = FieldMode.Read | FieldMode.Write, Action<T, T> readCallback = null,
-            Action<T, T> writeCallback = null, Action<T, T> changeCallback = null, Func<T, T> valueProviderCallback = null, string name = null) where R : PeripheralRegister
+                                            Action<T, T> writeCallback = null, Action<T, T> changeCallback = null, Func<T, T> valueProviderCallback = null, string name = null, Type enumType = null) where R : PeripheralRegister
             where T : struct, IConvertible
         {
-            enumField = register.DefineEnumField<T>(position, width, mode, readCallback, writeCallback, changeCallback, valueProviderCallback, name);
+            enumField = register.DefineEnumField<T>(position, width, mode, readCallback, writeCallback, changeCallback, valueProviderCallback, name, enumType);
+            return register;
+        }
+
+        public static R WithEnumField<R, T>(this R register, string range, out IEnumRegisterField<T> enumField, FieldMode mode = FieldMode.Read | FieldMode.Write, Action<T, T> readCallback = null,
+                                            Action<T, T> writeCallback = null, Action<T, T> changeCallback = null, Func<T, T> valueProviderCallback = null, string name = null, Type enumType = null) where R : PeripheralRegister
+            where T : struct, IConvertible
+        {
+            enumField = register.DefineEnumField<T>(range, mode, readCallback, writeCallback, changeCallback, valueProviderCallback, name, enumType);
             return register;
         }
 

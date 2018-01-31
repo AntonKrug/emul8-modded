@@ -24,8 +24,8 @@ namespace Emul8.Core.Structure.Registers
         private sealed class ValueRegisterField : RegisterField<uint>, IValueRegisterField
         {
             public ValueRegisterField(PeripheralRegister parent, int position, int width, FieldMode fieldMode, Action<uint, uint> readCallback,
-                Action<uint, uint> writeCallback, Action<uint, uint> changeCallback, Func<uint, uint> valueProviderCallback)
-                : base(parent, position, width, fieldMode, readCallback, writeCallback, changeCallback, valueProviderCallback)
+                Action<uint, uint> writeCallback, Action<uint, uint> changeCallback, Func<uint, uint> valueProviderCallback, string name)
+                : base(parent, position, width, fieldMode, readCallback, writeCallback, changeCallback, valueProviderCallback, name)
             {
             }
 
@@ -43,8 +43,8 @@ namespace Emul8.Core.Structure.Registers
         private sealed class EnumRegisterField<TEnum> : RegisterField<TEnum>, IEnumRegisterField<TEnum> where TEnum : struct, IConvertible
         {
             public EnumRegisterField(PeripheralRegister parent, int position, int width, FieldMode fieldMode, Action<TEnum, TEnum> readCallback,
-                Action<TEnum, TEnum> writeCallback, Action<TEnum, TEnum> changeCallback, Func<TEnum, TEnum> valueProviderCallback)
-                : base(parent, position, width, fieldMode, readCallback, writeCallback, changeCallback, valueProviderCallback)
+                                     Action<TEnum, TEnum> writeCallback, Action<TEnum, TEnum> changeCallback, Func<TEnum, TEnum> valueProviderCallback, string name, Type enumType)
+                : base(parent, position, width, fieldMode, readCallback, writeCallback, changeCallback, valueProviderCallback, name, enumType)
             {
             }
 
@@ -62,8 +62,8 @@ namespace Emul8.Core.Structure.Registers
         private sealed class FlagRegisterField : RegisterField<bool>, IFlagRegisterField
         {
             public FlagRegisterField(PeripheralRegister parent, int position, FieldMode fieldMode, Action<bool, bool> readCallback,
-                Action<bool, bool> writeCallback, Action<bool, bool> changeCallback, Func<bool, bool> valueProviderCallback)
-                : base(parent, position, 1, fieldMode, readCallback, writeCallback, changeCallback, valueProviderCallback)
+                Action<bool, bool> writeCallback, Action<bool, bool> changeCallback, Func<bool, bool> valueProviderCallback, string name)
+                : base(parent, position, 1, fieldMode, readCallback, writeCallback, changeCallback, valueProviderCallback, name)
             {
             }
 
@@ -139,7 +139,7 @@ namespace Emul8.Core.Structure.Registers
             }
 
             protected RegisterField(PeripheralRegister parent, int position, int width, FieldMode fieldMode, Action<T, T> readCallback,
-                Action<T, T> writeCallback, Action<T, T> changeCallback, Func<T, T> valueProviderCallback) : base(parent, position, width, fieldMode)
+                                    Action<T, T> writeCallback, Action<T, T> changeCallback, Func<T, T> valueProviderCallback, string name, Type enumType = null) : base(parent, position, width, fieldMode, name, enumType)
             {
                 this.readCallback = readCallback;
                 this.writeCallback = writeCallback;
@@ -170,8 +170,24 @@ namespace Emul8.Core.Structure.Registers
             public readonly int position;
             public readonly int width;
             public readonly FieldMode fieldMode;
+            public readonly string name;
+            public readonly Type enumType;
 
-            protected RegisterField(PeripheralRegister parent, int position, int width, FieldMode fieldMode)
+            public override string ToString() {
+                string str = "Ofsset:" + position.ToString() + " width:" + width.ToString() + " fieldMode:" + fieldMode.GetType().Name + " access:" + fieldMode.ToString() + " name/description:" + name + "\n\r";
+                if (null != enumType) {
+                    str += " Enum's " + enumType.ToString() + " possible values: \r\n";
+                    foreach (int value in Enum.GetValues(enumType))
+                    {
+                        string name = Enum.GetName(enumType, value);
+                        str += " (" + value + ") " + name + "\r\n";
+                    }
+
+                }
+                return str;
+            }
+
+            protected RegisterField(PeripheralRegister parent, int position, int width, FieldMode fieldMode, string name = null, Type enumType = null)
             {
                 if(!fieldMode.IsValid())
                 {
@@ -181,6 +197,8 @@ namespace Emul8.Core.Structure.Registers
                 this.position = position;
                 this.fieldMode = fieldMode;
                 this.width = width;
+                this.name = name;
+                this.enumType = enumType;
             }
 
             protected uint FilterValue(uint value)

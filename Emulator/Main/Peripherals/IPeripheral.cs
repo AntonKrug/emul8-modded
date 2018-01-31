@@ -21,6 +21,7 @@ namespace Emul8.Peripherals
 
     public static class IPeripheralExtensions
     {
+
         public static bool HasGPIO(this IPeripheral peripheral)
         {
             return peripheral is INumberedGPIOOutput || peripheral.GetType().GetProperties().Any(x => x.PropertyType == typeof(GPIO));

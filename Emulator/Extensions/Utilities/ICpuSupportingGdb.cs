@@ -15,7 +15,7 @@ namespace Emul8.Peripherals.CPU
         event Action<HaltArguments> Halted;
         void EnterSingleStepModeSafely(HaltArguments args);
 
-        void StartGdbServer(int port);
+        void StartGdbServer(int port, bool autoStartOnConnection = false);
         void StopGdbServer();
         bool IsGdbServerCreated { get; }
     }

@@ -75,7 +75,7 @@ namespace Emul8.Peripherals.CPU
             InitDisas();
         }
 
-        public void StartGdbServer(int port)
+        public void StartGdbServer(int port, bool autoStartOnConnection = false)
         {
             if(IsGdbServerCreated)
             {
@@ -84,7 +84,7 @@ namespace Emul8.Peripherals.CPU
 
             try
             {
-                stub = new GdbStub(port, this);
+                stub = new GdbStub(port, this, autoStartOnConnection);
             }
             catch(SocketException e)
             {

@@ -8,6 +8,7 @@
 using System.Collections.Generic;
 using Emul8.Peripherals;
 using Emul8.Logging;
+using System;
 
 namespace Emul8.Core.Structure.Registers
 {
@@ -24,6 +25,13 @@ namespace Emul8.Core.Structure.Registers
         public DoubleWordRegisterCollection(IPeripheral parent, IDictionary<long, DoubleWordRegister> registersMap)
         {
             this.parent = parent;
+            this.registers = new Dictionary<long, DoubleWordRegister>(registersMap);
+        }
+
+        public DoubleWordRegisterCollection(IPeripheral parent,Type enumType, IDictionary<long, DoubleWordRegister> registersMap)
+        {
+            this.parent = parent;
+            this.enumType = enumType;
             this.registers = new Dictionary<long, DoubleWordRegister>(registersMap);
         }
 
@@ -101,8 +109,21 @@ namespace Emul8.Core.Structure.Registers
             }
         }
 
+
+        public string GetAllRegistersFields()
+        {
+            string ret = "";
+
+            foreach (long val in registers.Keys) {
+                ret += "---------------- Register: " + Enum.GetName(enumType, val) + "(" + val + " offset)" +  " -----------------\r\n";
+                ret += registers[val].GetFields();
+            }
+            return ret;
+        }
+
         private readonly IPeripheral parent;
-        private readonly IDictionary<long, DoubleWordRegister> registers;
+        private readonly Type enumType;
+        public readonly IDictionary<long, DoubleWordRegister> registers;
     }
 
     /// <summary>
@@ -196,7 +217,7 @@ namespace Emul8.Core.Structure.Registers
         }
 
         private readonly IPeripheral parent;
-        private readonly IDictionary<long, WordRegister> registers;
+        public readonly IDictionary<long, WordRegister> registers;
     }
 
     /// <summary>
@@ -290,6 +311,6 @@ namespace Emul8.Core.Structure.Registers
         }
 
         private readonly IPeripheral parent;
-        private readonly IDictionary<long, ByteRegister> registers;
+        public readonly IDictionary<long, ByteRegister> registers;
     }
 }

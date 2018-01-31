@@ -566,7 +566,7 @@ namespace Emul8.Peripherals.IRQControllers
             SystemHandlerPriority1 = 0xD18,
             SystemHandlerPriority2 = 0xD1C,
             SystemHandlerPriority3 = 0xD20,
-	    SystemHandlerControlAndState = 0xD24,
+	        SystemHandlerControlAndState = 0xD24,
             ConfigurableFaultStatus = 0xD28,
             HardFaultStatus = 0xD2C,
             DebugFaultStatus = 0xD30,

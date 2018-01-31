@@ -17,6 +17,11 @@ namespace Emul8.Core.Structure.Registers
         public String Name;
         public int Position;
         public int Width;
+
+        public override string ToString() {
+            return "Offset:" + Position + " width:" + Width + " name/description:" + Name + "\r\n";
+        }
     }
+
 }
 

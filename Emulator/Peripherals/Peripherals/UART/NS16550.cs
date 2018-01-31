@@ -25,6 +25,11 @@ namespace Emul8.Peripherals.UART
             Reset();
         }
 
+
+        public NS16550(Machine machine, int wideRegisters = 0): this (machine, Convert.ToBoolean(wideRegisters))
+        {
+        }
+
         public GPIO IRQ { get; private set; }
 
         public long Size
